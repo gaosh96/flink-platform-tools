@@ -14,9 +14,8 @@ class UdfClassSearcherTest {
 
     @Test
     void getUdfClassList() throws IOException {
-
-        List<String> udfClassList = UdfClassSearcher.getUdfClassList("");
+        String jarFilePath = this.getClass().getClassLoader().getResource("myudf.jar").getPath();
+        List<String> udfClassList = UdfClassSearcher.getUdfClassList(jarFilePath);
         System.out.println(udfClassList);
-
     }
 }

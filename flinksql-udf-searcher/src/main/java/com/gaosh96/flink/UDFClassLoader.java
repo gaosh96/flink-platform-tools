@@ -15,16 +15,15 @@ import static com.gaosh96.flink.ConfigConstants.CLASS_SUFFIX;
  */
 public class UDFClassLoader extends ClassLoader {
 
-    private String jarFilePath;
+    private JarFile jarFile;
 
-    public UDFClassLoader(String jarFilePath) {
-        this.jarFilePath = jarFilePath;
+    public UDFClassLoader(String jarFilePath) throws IOException {
+        this.jarFile = new JarFile(new File(jarFilePath));
     }
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         try {
-            JarFile jarFile = new JarFile(new File(jarFilePath));
             JarEntry entry = jarFile.getJarEntry(name.replace(".", "/") + CLASS_SUFFIX);
 
             if (entry != null) {

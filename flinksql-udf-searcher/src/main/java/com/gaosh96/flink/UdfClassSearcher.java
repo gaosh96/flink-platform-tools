@@ -34,14 +34,16 @@ public class UdfClassSearcher {
 
         List<String> udfClassList = new ArrayList<>();
 
+        // maybe cause IOException
         JarFile jarFile = new JarFile(new File(jarFilePath));
-        Enumeration<JarEntry> entries = jarFile.entries();
+        UDFClassLoader udfClassLoader = new UDFClassLoader(jarFilePath);
 
+        // start traverse
+        Enumeration<JarEntry> entries = jarFile.entries();
         while (entries.hasMoreElements()) {
             JarEntry entry = entries.nextElement();
             if (!entry.isDirectory() && entry.getName().endsWith(CLASS_SUFFIX)) {
                 String className = entry.getName().replace("/", ".").substring(0, entry.getName().length() - 6);
-                UDFClassLoader udfClassLoader = new UDFClassLoader(jarFilePath);
                 Class<?> clazz;
                 try {
                     clazz = udfClassLoader.loadClass(className);
