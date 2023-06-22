@@ -1,0 +1,1 @@
+# flink platform tools 一些 Flink 任务提交平台的工具## flinksql-udf-searcher* 用于解析 jar 包中符合 FlinkSQL UDF 的类全路径```java// 自定义的 flinksql udf jar 包String jarFilePath = "myudf.jar";// 返回 flinksql udf 实现类的全类名列表List<String> udfClassList = UdfClassSearcher.getUdfClassList(jarFilePath);```
