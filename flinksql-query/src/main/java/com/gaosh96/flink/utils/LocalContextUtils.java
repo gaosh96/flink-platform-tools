@@ -42,7 +42,7 @@ public class LocalContextUtils {
         String flinkConfigDir = System.getenv(ConfigConstants.ENV_FLINK_CONF_DIR);
         Configuration configuration = GlobalConfiguration.loadConfiguration(flinkConfigDir);
         // job name
-        configuration.set(NAME, "select stmt test");
+        configuration.set(NAME, "flinksql query test");
         // yarn application id
         configuration.set(APPLICATION_ID, sessionId);
         configuration.set(EXECUTION_RESULT_MODE, TABLEAU);
