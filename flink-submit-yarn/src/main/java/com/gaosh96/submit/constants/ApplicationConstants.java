@@ -7,7 +7,7 @@ package com.gaosh96.submit.constants;
  */
 public interface ApplicationConstants {
 
-    String FLINK_COMMON_LIBS = "hdfs:///flink_%s/libs";
+    String FLINK_COMMON_LIBS = "hdfs://hadoop001:8020/flink_%s/libs";
 
     String FLINK_DIST_JAR = "/Users/gaosh/apps/flink-%s/lib/flink-dist_2.12-%s.jar";
 

@@ -2,6 +2,7 @@ package com.gaosh96.submit.entity;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ import java.util.List;
  * @since 2023/10/10
  */
 @Data
-@Builder
+@SuperBuilder
 public class FlinkJarJobConfig extends JobConfig {
 
     private String mainClass;

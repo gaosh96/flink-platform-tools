@@ -19,6 +19,8 @@ public class ConfigurationUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConfigurationUtils.class);
 
+    //private static final String HADOOP_CONF_FILE_NAMES = "core-site.xml,hdfs-site.xml,yarn-site.xml";
+
     public static Configuration loadYAMLResource(File file) {
         final Configuration config = new Configuration();
 
@@ -75,5 +77,14 @@ public class ConfigurationUtils {
 
         return config;
     }
+
+    //public static void mergeHadoopAndFlinkConfiguration(String clusterName, Configuration flinkConfig) {
+    //    org.apache.hadoop.conf.Configuration hadoopConfig = new org.apache.hadoop.conf.Configuration();
+    //    for (String confFile : HADOOP_CONF_FILE_NAMES.split(",")) {
+    //        hadoopConfig.addResource(ConfigurationUtils.class.getClassLoader().getResource(clusterName + "/" + confFile));
+    //    }
+    //
+    //    hadoopConfig.iterator().forEachRemaining(x -> flinkConfig.setString(x.getKey(), x.getValue()));
+    //}
 
 }

@@ -1,6 +1,7 @@
 package com.gaosh96.submit.jar;
 
 import com.gaosh96.submit.entity.FlinkJarJobConfig;
+import com.gaosh96.submit.entity.SubmitResponse;
 import com.gaosh96.submit.utils.ConfigurationUtils;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.deployment.ClusterClientFactory;
@@ -20,9 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import static com.gaosh96.submit.constants.ApplicationConstants.FLINK_COMMON_LIBS;
 import static com.gaosh96.submit.constants.ApplicationConstants.FLINK_CONF_NAME;
@@ -37,10 +36,11 @@ public class FlinkJarSubmitApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(FlinkJarSubmitApp.class);
 
-    public static void submit(FlinkJarJobConfig jarConfig) {
+    public static SubmitResponse submit(FlinkJarJobConfig jarConfig) {
 
         String flinkVersion = jarConfig.getFlinkVersion();
         String flinkVersionWithDots = flinkVersion.replaceAll("_", "\\.");
+        //String clusterName = jarConfig.getClusterName();
 
         // 可以放到配置中心，这里放到 resources 目录下面读取
         String flinkConfFilePath = FlinkJarSubmitApp.class.getClassLoader().getResource(String.format(FLINK_CONF_NAME, flinkVersion)).getPath();
@@ -51,9 +51,7 @@ public class FlinkJarSubmitApp {
         flinkConfig.set(DeploymentOptions.TARGET, "yarn-application");
         // 保存在 hdfs的公共的依赖 jar 包
         // -Dyarn.provided.lib.dirs
-        List<String> libs = new ArrayList<>();
-        libs.add(String.format(FLINK_COMMON_LIBS, flinkVersion));
-        flinkConfig.set(YarnConfigOptions.PROVIDED_LIB_DIRS, libs);
+        flinkConfig.set(YarnConfigOptions.PROVIDED_LIB_DIRS, Collections.singletonList(String.format(FLINK_COMMON_LIBS, flinkVersion)));
         // flink dist jar，需要一个本地路径，例如 flink-dist_2.12-1.14.4.jar
         flinkConfig.set(YarnConfigOptions.FLINK_DIST_JAR, String.format(FLINK_DIST_JAR, flinkVersionWithDots, flinkVersionWithDots));
         // -d
@@ -68,13 +66,13 @@ public class FlinkJarSubmitApp {
         // -ynm
         flinkConfig.set(YarnConfigOptions.APPLICATION_NAME, jarConfig.getJobName());
         // -yt 本地路径，上传到 hdfs 的临时目录
-        flinkConfig.set(YarnConfigOptions.SHIP_FILES, jarConfig.getShipFiles());
+        //flinkConfig.set(YarnConfigOptions.SHIP_FILES, jarConfig.getShipFiles());
         // -C  file:///xxx;file:///xxx
-        flinkConfig.set(PipelineOptions.CLASSPATHS, jarConfig.getClasspathFiles());
+        //flinkConfig.set(PipelineOptions.CLASSPATHS, jarConfig.getClasspathFiles());
         // -c
         flinkConfig.set(ApplicationConfiguration.APPLICATION_MAIN_CLASS, jarConfig.getMainClass());
         // jar
-        flinkConfig.set(PipelineOptions.JARS, Collections.singletonList(jarConfig.getFlinkDistJar()));
+        flinkConfig.set(PipelineOptions.JARS, Collections.singletonList(jarConfig.getJarFilePath()));
         // 传入主类的 args
         flinkConfig.set(ApplicationConfiguration.APPLICATION_ARGS, jarConfig.getArgs());
 
@@ -91,12 +89,18 @@ public class FlinkJarSubmitApp {
             clusterClient = clusterDescriptor.deployApplicationCluster(clusterSpecification, applicationConfiguration).getClusterClient();
             String applicationId = clusterClient.getClusterId().toString();
             String jobManagerUrl = clusterClient.getWebInterfaceURL();
-
             LOG.info("applicationId: {}", applicationId);
             LOG.info("jobManagerUrl: {}", jobManagerUrl);
 
+            return SubmitResponse.builder()
+                    .jobId(jobId)
+                    .applicationId(applicationId)
+                    .jobManagerUrl(jobManagerUrl)
+                    .status("success").build();
+
         } catch (ClusterDeploymentException e) {
             e.printStackTrace();
+            return null;
         } finally {
             if (clusterClient != null) {
                 clusterClient.close();

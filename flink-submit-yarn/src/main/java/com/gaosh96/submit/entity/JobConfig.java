@@ -1,6 +1,7 @@
 package com.gaosh96.submit.entity;
 
 import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ import java.util.List;
  * @since 2023/10/10
  */
 @Data
+@SuperBuilder
 public class JobConfig {
 
     // -ynm & -Dpipeline.name
@@ -36,5 +38,8 @@ public class JobConfig {
     private List<String> classpathFiles;
 
     private String flinkDistJar;
+
+    // hadoop cluster name
+    private String clusterName;
 
 }

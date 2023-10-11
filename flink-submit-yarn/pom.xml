@@ -16,6 +16,7 @@
         <maven.compiler.target>8</maven.compiler.target>
         <flink.version>1.14.4</flink.version>
         <scala.binary.version>2.12</scala.binary.version>
+        <slf4j.version>1.7.32</slf4j.version>
     </properties>
 
     <dependencies>
@@ -61,10 +62,22 @@
             <version>1.18.28</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 
-    <build>
-
-    </build>
 
 </project>
