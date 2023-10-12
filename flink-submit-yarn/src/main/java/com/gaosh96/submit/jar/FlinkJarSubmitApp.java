@@ -2,7 +2,9 @@ package com.gaosh96.submit.jar;
 
 import com.gaosh96.submit.entity.FlinkJarJobConfig;
 import com.gaosh96.submit.entity.SubmitResponse;
+import com.gaosh96.submit.utils.ClusterUtils;
 import com.gaosh96.submit.utils.ConfigurationUtils;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.flink.api.common.JobID;
 import org.apache.flink.client.deployment.ClusterClientFactory;
 import org.apache.flink.client.deployment.ClusterDeploymentException;
@@ -15,6 +17,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.DeploymentOptions;
 import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.configuration.PipelineOptionsInternal;
+import org.apache.flink.runtime.messages.Acknowledge;
 import org.apache.flink.yarn.configuration.YarnConfigOptions;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.slf4j.Logger;
@@ -22,6 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static com.gaosh96.submit.constants.ApplicationConstants.FLINK_COMMON_LIBS;
 import static com.gaosh96.submit.constants.ApplicationConstants.FLINK_CONF_NAME;
@@ -36,6 +44,22 @@ public class FlinkJarSubmitApp {
 
     private static final Logger LOG = LoggerFactory.getLogger(FlinkJarSubmitApp.class);
 
+    private static final ExecutorService executorService =
+            new ThreadPoolExecutor(
+                    Runtime.getRuntime().availableProcessors() * 5,
+                    Runtime.getRuntime().availableProcessors() * 10,
+                    60L,
+                    TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>(1024),
+                    new ThreadFactoryBuilder().setNameFormat("flink-executor" + "-%d").setDaemon(true).build(),
+                    new ThreadPoolExecutor.AbortPolicy());
+
+    /**
+     * submit job with yarn-application mode
+     *
+     * @param jarConfig
+     * @return
+     */
     public static SubmitResponse submit(FlinkJarJobConfig jarConfig) {
 
         String flinkVersion = jarConfig.getFlinkVersion();
@@ -76,6 +100,10 @@ public class FlinkJarSubmitApp {
         // 传入主类的 args
         flinkConfig.set(ApplicationConfiguration.APPLICATION_ARGS, jarConfig.getArgs());
 
+        // savepoint config
+        //flinkConfig.set(SavepointConfigOptions.SAVEPOINT_PATH, "");
+        //flinkConfig.set(SavepointConfigOptions.SAVEPOINT_IGNORE_UNCLAIMED_STATE, false);
+
         // deploy job
         DefaultClusterClientServiceLoader clusterClientServiceLoader = new DefaultClusterClientServiceLoader();
         ClusterClientFactory<ApplicationId> clusterClientFactory = clusterClientServiceLoader.getClusterClientFactory(flinkConfig);
@@ -110,5 +138,83 @@ public class FlinkJarSubmitApp {
             }
         }
 
+    }
+
+    /**
+     * cancel job
+     *
+     * @param applicationId
+     * @param jobId
+     */
+    public static void cancelJob(String applicationId, String jobId) {
+        ClusterClient<ApplicationId> clusterClient = ClusterUtils.getClusterClient(applicationId);
+        if (clusterClient == null) {
+            LOG.error("clusterClient is null");
+            return;
+        }
+        JobID jobID = JobID.fromHexString(jobId);
+        CompletableFuture<Acknowledge> cancelFuture = clusterClient.cancel(jobID);
+        // 使用时需要用自定义的线程池，这里用自带的
+        cancelFuture.whenCompleteAsync((acknowledge, throwable) -> {
+            if (throwable != null) {
+                LOG.error(throwable.getMessage());
+            } else {
+                LOG.info("application: {}, jobId: {} has been cancelled", applicationId, jobId);
+            }
+        }, executorService);
+    }
+
+    /**
+     * cancel job
+     *
+     * @param applicationId
+     * @param jobId
+     */
+    public static void cancelJobWithSavepoint(String applicationId, String jobId, String savepointPath) {
+        ClusterClient<ApplicationId> clusterClient = ClusterUtils.getClusterClient(applicationId);
+        if (clusterClient == null) {
+            LOG.error("clusterClient is null");
+            return;
+        }
+
+        JobID jobID = JobID.fromHexString(jobId);
+        CompletableFuture<String> cancelWithSavepointFuture
+                = clusterClient.cancelWithSavepoint(jobID, savepointPath);
+        // 使用时需要用自定义的线程池，这里用自带的
+        cancelWithSavepointFuture.whenCompleteAsync((located, throwable) -> {
+            if (throwable != null) {
+                LOG.error(throwable.getMessage());
+            } else {
+                LOG.info("application: {}, jobId: {} has been cancelled with savepoint, savepoint path is {}", applicationId, jobId, located);
+            }
+        }, executorService);
+    }
+
+
+    /**
+     * trigger savepoint
+     *
+     * @param applicationId
+     * @param jobId
+     * @param savepointPath
+     */
+    public static void triggerSavepoint(String applicationId, String jobId, String savepointPath) {
+        ClusterClient<ApplicationId> clusterClient = ClusterUtils.getClusterClient(applicationId);
+        if (clusterClient == null) {
+            LOG.error("clusterClient is null");
+            return;
+        }
+
+        JobID jobID = JobID.fromHexString(jobId);
+        CompletableFuture<String> savepointFuture = clusterClient.triggerSavepoint(jobID, savepointPath);
+
+        // 使用时需要用自定义的线程池，这里用自带的
+        savepointFuture.whenCompleteAsync((located, throwable) -> {
+            if (throwable != null) {
+                LOG.error(throwable.getMessage());
+            } else {
+                LOG.info("application: {}, jobId: {} trigger savepoint success, savepoint path is {}", applicationId, jobId, located);
+            }
+        }, executorService);
     }
 }
