@@ -12,6 +12,7 @@
         <module>flinksql-udf-searcher</module>
         <module>flink-submit-yarn</module>
         <module>flinksql-query</module>
+        <module>flink-sql-common</module>
     </modules>
 
     <properties>

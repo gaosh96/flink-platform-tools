@@ -154,7 +154,6 @@ public class FlinkJarSubmitApp {
         }
         JobID jobID = JobID.fromHexString(jobId);
         CompletableFuture<Acknowledge> cancelFuture = clusterClient.cancel(jobID);
-        // 使用时需要用自定义的线程池，这里用自带的
         cancelFuture.whenCompleteAsync((acknowledge, throwable) -> {
             if (throwable != null) {
                 LOG.error(throwable.getMessage());
@@ -180,7 +179,6 @@ public class FlinkJarSubmitApp {
         JobID jobID = JobID.fromHexString(jobId);
         CompletableFuture<String> cancelWithSavepointFuture
                 = clusterClient.cancelWithSavepoint(jobID, savepointPath);
-        // 使用时需要用自定义的线程池，这里用自带的
         cancelWithSavepointFuture.whenCompleteAsync((located, throwable) -> {
             if (throwable != null) {
                 LOG.error(throwable.getMessage());
@@ -207,8 +205,6 @@ public class FlinkJarSubmitApp {
 
         JobID jobID = JobID.fromHexString(jobId);
         CompletableFuture<String> savepointFuture = clusterClient.triggerSavepoint(jobID, savepointPath);
-
-        // 使用时需要用自定义的线程池，这里用自带的
         savepointFuture.whenCompleteAsync((located, throwable) -> {
             if (throwable != null) {
                 LOG.error(throwable.getMessage());
