@@ -18,12 +18,12 @@ public class JobConfig {
     private String jobName;
     // -yqu
     private String yarnQueue;
-    // -yjm
+    // -yjm M
     private String jmMemorySize;
-    // -ytm
+    // -ytm M
     private String tmMemorySize;
     // -ys
-    private String slotPerTm;
+    private int slotPerTm;
     // -p
     private int parallelism;
 

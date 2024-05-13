@@ -14,6 +14,9 @@ import java.util.List;
  */
 public class FlinkJarSubmitAppTest {
 
+    /**
+     * 配置环境变量 HADOOP_HOME=/Users/gaosh/apps/hadoop
+     */
     @Test
     public void testJarSubmit() {
 
@@ -21,7 +24,7 @@ public class FlinkJarSubmitAppTest {
         String flinkVersion = "1_14_4";
         String jobName = "SocketWindowWordCount";
         String mainClass = "org.apache.flink.streaming.examples.socket.SocketWindowWordCount";
-        String clusterName = "hadoop-cluster01";
+        //String clusterName = "hadoop-cluster01";
         List<String> args = new ArrayList<>();
         args.add("--hostname");
         args.add("localhost");
@@ -29,10 +32,14 @@ public class FlinkJarSubmitAppTest {
         args.add("9999");
 
         FlinkJarJobConfig jarJobConfig = FlinkJarJobConfig.builder()
-                .clusterName(clusterName)
+                //.clusterName(clusterName)
                 .flinkVersion(flinkVersion)
                 .jarFilePath(jarFilePath)
                 .jobName(jobName)
+                .slotPerTm(1)
+                .parallelism(2)
+                .tmMemorySize("2048")
+                .jmMemorySize("1024")
                 .mainClass(mainClass)
                 .args(args)
                 .build();

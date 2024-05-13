@@ -14,11 +14,16 @@ import org.apache.flink.client.deployment.DefaultClusterClientServiceLoader;
 import org.apache.flink.client.deployment.application.ApplicationConfiguration;
 import org.apache.flink.client.program.ClusterClient;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.CoreOptions;
 import org.apache.flink.configuration.DeploymentOptions;
+import org.apache.flink.configuration.JobManagerOptions;
+import org.apache.flink.configuration.MemorySize;
 import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.configuration.PipelineOptionsInternal;
+import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.runtime.messages.Acknowledge;
 import org.apache.flink.yarn.configuration.YarnConfigOptions;
+import org.apache.flink.yarn.configuration.YarnConfigOptionsInternal;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +85,8 @@ public class FlinkJarSubmitApp {
         flinkConfig.set(YarnConfigOptions.FLINK_DIST_JAR, String.format(FLINK_DIST_JAR, flinkVersionWithDots, flinkVersionWithDots));
         // -d
         flinkConfig.set(DeploymentOptions.ATTACHED, true);
+        // -p
+        flinkConfig.set(CoreOptions.DEFAULT_PARALLELISM, jarConfig.getParallelism());
         // set job name
         flinkConfig.set(PipelineOptions.NAME, jarConfig.getJobName());
         // set job ID
@@ -99,6 +106,17 @@ public class FlinkJarSubmitApp {
         flinkConfig.set(PipelineOptions.JARS, Collections.singletonList(jarConfig.getJarFilePath()));
         // 传入主类的 args
         flinkConfig.set(ApplicationConfiguration.APPLICATION_ARGS, jarConfig.getArgs());
+
+        // 手动指定 log4j 日志位置，fix: The file LOG does not exist on the TaskExecutor.
+        flinkConfig.set(YarnConfigOptionsInternal.APPLICATION_LOG_CONFIG_FILE, "/Users/gaosh/apps/flink-1.14.4/conf/log4j.properties");
+
+        // 指定作业资源
+        // -ys
+        flinkConfig.set(TaskManagerOptions.NUM_TASK_SLOTS, jarConfig.getSlotPerTm());
+        // -ytm
+        flinkConfig.set(TaskManagerOptions.TOTAL_PROCESS_MEMORY, MemorySize.parse(jarConfig.getTmMemorySize(), MemorySize.MemoryUnit.MEGA_BYTES));
+        // -yjm
+        flinkConfig.set(JobManagerOptions.TOTAL_PROCESS_MEMORY, MemorySize.parse(jarConfig.getJmMemorySize(), MemorySize.MemoryUnit.MEGA_BYTES));
 
         // savepoint config
         //flinkConfig.set(SavepointConfigOptions.SAVEPOINT_PATH, "");
