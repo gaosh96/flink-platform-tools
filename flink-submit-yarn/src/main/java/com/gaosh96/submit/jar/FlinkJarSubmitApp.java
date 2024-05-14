@@ -24,6 +24,7 @@ import org.apache.flink.configuration.TaskManagerOptions;
 import org.apache.flink.runtime.messages.Acknowledge;
 import org.apache.flink.yarn.configuration.YarnConfigOptions;
 import org.apache.flink.yarn.configuration.YarnConfigOptionsInternal;
+import org.apache.flink.yarn.configuration.YarnDeploymentTarget;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +78,7 @@ public class FlinkJarSubmitApp {
         Configuration flinkConfig = ConfigurationUtils.loadYAMLResource(new File(flinkConfFilePath));
 
         // yarn-application 模式执行
-        flinkConfig.set(DeploymentOptions.TARGET, "yarn-application");
+        flinkConfig.set(DeploymentOptions.TARGET, YarnDeploymentTarget.APPLICATION.getName());
         // 保存在 hdfs的公共的依赖 jar 包
         // -Dyarn.provided.lib.dirs
         flinkConfig.set(YarnConfigOptions.PROVIDED_LIB_DIRS, Collections.singletonList(String.format(FLINK_COMMON_LIBS, flinkVersion)));
